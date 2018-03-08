@@ -4,6 +4,7 @@ import sys
 import logging
 import pika
 import json
+import configparser
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--iter", help="running iteration, write value like 1, 2, 3 or so on")
@@ -26,8 +27,13 @@ logging.getLogger('').addHandler(console)
 
 logger = logging.getLogger()
 
-connection = pika.BlockingConnection(pika.URLParameters('amqp://guest:guest@localhost:5672/'))
-channel = connection.channel()
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+rabbitMQconnection = pika.BlockingConnection(
+    pika.URLParameters('amqp://%s:%s@%s:%s/' % (config['rabbitmq']['username'], config['rabbitmq']['password'], config['rabbitmq']['host'], config['rabbitmq']['port']))
+)
+channel = rabbitMQconnection.channel()
 channel.exchange_declare(exchange='deals', exchange_type='topic', durable=True)
 routing_key = 'deals.content'
 
